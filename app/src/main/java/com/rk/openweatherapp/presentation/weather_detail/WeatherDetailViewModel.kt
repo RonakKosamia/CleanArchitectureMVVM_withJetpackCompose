@@ -19,26 +19,23 @@ class WeatherDetailViewModel @Inject constructor(
     private val _state = MutableStateFlow(WeatherState())
     val state = _state.asStateFlow()
 
-    // Updated function to include lat, lon, and date
+    // Function to get weather data by latitude, longitude, and date
     fun getWeatherBy(lat: Double, lon: Double, date: Int) {
         getWeatherDetailUseCase(lat, lon, date).onEach { result ->
             when (result) {
                 is Resource.Success -> {
-                    _state.emit(WeatherState(weather = result.data))
+                    _state.value = WeatherState(weather = result.data)
                 }
-
                 is Resource.Error -> {
-                    _state.emit(
-                        WeatherState(
-                            error = result.message ?: "An unexpected error occurred"
-                        )
+                    _state.value = WeatherState(
+                        error = result.message ?: "An unexpected error occurred"
                     )
                 }
-
                 is Resource.Loading -> {
-                    _state.emit(WeatherState(isLoading = true))
+                    _state.value = WeatherState(isLoading = true)
                 }
             }
         }.launchIn(viewModelScope)
     }
 }
+

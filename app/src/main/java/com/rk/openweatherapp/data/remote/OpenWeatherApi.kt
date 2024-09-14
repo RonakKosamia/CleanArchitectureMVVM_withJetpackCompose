@@ -25,4 +25,10 @@ interface OpenWeatherApi {
         @Query("lon") lon: Double,
         @Query("appid") apiKey: String = BuildConfig.OPEN_WEATHER_API_KEY // Default API key
     ): WeatherResponseDto
+
+    @GET("weather")
+    suspend fun getWeatherByCity(
+        @Query("q") city: String,
+        @Query("appid") apiKey: String = BuildConfig.OPEN_WEATHER_API_KEY
+    ): WeatherResponseDto
 }

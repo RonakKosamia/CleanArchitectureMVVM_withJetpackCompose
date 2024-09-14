@@ -1,22 +1,25 @@
+import org.jetbrains.kotlin.gradle.internal.KaptWithoutKotlincTask
+
 // Top-level build file where you can add configuration options common to all sub-projects/modules.
 buildscript {
-    ext.kotlin_version = '1.7.20' // Or latest version
+    ext.kotlin_version = '1.9.10'
     repositories {
         google()
         mavenCentral()
     }
     dependencies {
-        classpath "com.android.tools.build:gradle:7.2.0"  // Use a stable version
-        classpath "androidx.navigation:navigation-safe-args-gradle-plugin:2.8.0"
-        // Compatible with Android Gradle Plugin 8.1.x
+        classpath "com.android.tools.build:gradle:8.1.4"
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
-        classpath 'com.google.dagger:hilt-android-gradle-plugin:2.44'
-
-        // NOTE: Do not place your application dependencies here; they belong
-        // in the individual module build.gradle files
+        classpath 'com.google.dagger:hilt-android-gradle-plugin:2.46.1'
     }
 }
 
 tasks.register('clean', Delete) {
     delete rootProject.buildDir
 }
+
+// Optional memory management for kapt (remove if not needed)
+tasks.withType(KaptWithoutKotlincTask.class)
+        .configureEach {
+            kaptProcessJvmArgs.add('-Xmx512m')
+        }

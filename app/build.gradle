@@ -3,21 +3,20 @@ plugins {
     id 'kotlin-android'
     id 'kotlin-kapt'
     id 'dagger.hilt.android.plugin'
-    id 'androidx.navigation.safeargs.kotlin'
 }
 
 android {
-    compileSdk 33
+    compileSdk 34
     namespace 'com.rk.openweatherapp'
+
     defaultConfig {
         minSdk 21
-        targetSdk 33
+        targetSdk 34
         versionCode 1
         versionName "1.0"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
 
         buildConfigField "String", "OPEN_WEATHER_API_KEY", "\"${project.findProperty('OPEN_WEATHER_API_KEY')}\""
-
     }
 
     buildTypes {
@@ -26,6 +25,7 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
+
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_17
         targetCompatibility JavaVersion.VERSION_17
@@ -37,41 +37,60 @@ android {
 
     buildFeatures {
         buildConfig = true
-        viewBinding = true
-        dataBinding = true
+        compose = true  // Only keep compose
+    }
+
+    composeOptions {
+        kotlinCompilerExtensionVersion '1.5.3'
     }
 }
 
 kapt {
+    useBuildCache = true
+    showProcessorStats = true
     correctErrorTypes = true
+    javacOptions {
+        option("-Xmaxerrs", 500)
+    }
 }
 
 dependencies {
+    // Compose dependencies
+    // Compose dependencies
+    implementation "androidx.compose.ui:ui:1.5.3"
+    implementation "androidx.compose.material:material:1.5.3"
+    implementation "androidx.compose.ui:ui-tooling-preview:1.5.3"
+    implementation "androidx.navigation:navigation-compose:2.8.0"
+    implementation "androidx.lifecycle:lifecycle-viewmodel-compose:2.6.1"
+
+//    implementation "androidx.compose.ui:ui:1.7.1"
+//    implementation "androidx.compose.material:material:1.7.1"
+//    implementation "androidx.compose.ui:ui-tooling-preview:1.7.1"
+//    implementation "androidx.navigation:navigation-compose:2.8.0"
+//    implementation "androidx.lifecycle:lifecycle-viewmodel-compose:2.8.5"
+    implementation "androidx.hilt:hilt-navigation-compose:1.2.0"
+    kapt "androidx.hilt:hilt-compiler:1.2.0"
 
     // Material Components
     implementation 'com.google.android.material:material:1.12.0'
 
     // Coil
-    implementation 'io.coil-kt:coil:2.7.0'// Check if updating Coil resolves the issue
+    implementation "io.coil-kt:coil-compose:2.2.2"
 
-    //Google mapping-  gms..
+    // Google Location Services
     implementation 'com.google.android.gms:play-services-location:21.3.0'
-    // Dagger - Hilt
-    implementation 'com.google.dagger:hilt-android:2.44'
-    kapt 'com.google.dagger:hilt-android-compiler:2.44'
 
-    // Retrofit
+    // Dagger - Hilt for DI
+    implementation 'com.google.dagger:hilt-android:2.46.1'
+    kapt 'com.google.dagger:hilt-android-compiler:2.46.1'
+
+    // Retrofit for networking
     implementation 'com.squareup.retrofit2:retrofit:2.11.0'
     implementation 'com.squareup.retrofit2:converter-gson:2.11.0'
 
-    // Navigation
-    implementation "androidx.navigation:navigation-fragment-ktx:2.8.0"
-
-    // Local unit tests
+    // Unit testing libraries
     testImplementation 'org.jetbrains.kotlinx:kotlinx-coroutines-test:1.8.1'
     testImplementation 'com.google.truth:truth:1.4.4'
     testImplementation 'com.squareup.okhttp3:mockwebserver:4.12.0'
-
-    // Kluent - for Kotlin assertions
     testImplementation 'org.amshove.kluent:kluent:1.73'
 }

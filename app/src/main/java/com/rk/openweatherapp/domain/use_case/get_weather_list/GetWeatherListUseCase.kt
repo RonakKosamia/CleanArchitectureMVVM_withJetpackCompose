@@ -14,7 +14,11 @@ class GetWeatherListUseCase @Inject constructor(
     private val repository: WeatherRepository
 ) {
 
-    operator fun invoke(lat: Double, lon: Double): Flow<Resource<List<Weather>>> = flow {
+    suspend fun getWeatherByCity(city: String): Flow<Resource<List<Weather>>> {
+        return repository.getWeatherByCity(city)
+    }
+
+   /* operator fun invoke(lat: Double, lon: Double): Flow<Resource<List<Weather>>> = flow {
         try {
             emit(Resource.Loading<List<Weather>>())
             // Fetch the list of Weather directly from the repository
@@ -29,7 +33,8 @@ class GetWeatherListUseCase @Inject constructor(
         } catch (e: IOException) {
             emit(Resource.Error<List<Weather>>("Couldn't reach server. Check your internet connection"))
         }
-    }
+    } */
 }
+
 
 
