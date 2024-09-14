@@ -22,9 +22,9 @@ fun WeatherResponseDto.toWeather(): Weather {
         day = main.temp_max, // Max temperature for day
         night = main.temp_min, // Min temperature for night
         title = weather.firstOrNull()?.main ?: "", // Weather condition (e.g., Clouds, Rain)
-        description = weather.firstOrNull()?.description ?: "", // Detailed description
+        description = weather.firstOrNull()?.description ?: "No Desc.", // Detailed description
         icon = weather.firstOrNull()?.icon ?: "", // Weather icon
-        currentTemp = main.temp, // Current temperature
+        currentTemp = main.temp,  // Current temperature
         feelsLike = main.feels_like, // Feels like temperature
         pressure = main.pressure, // Atmospheric pressure
         humidity = main.humidity, // Humidity percentage

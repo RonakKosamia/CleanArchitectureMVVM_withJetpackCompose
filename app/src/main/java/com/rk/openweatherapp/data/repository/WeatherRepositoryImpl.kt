@@ -1,5 +1,6 @@
 package com.rk.openweatherapp.data.repository
 
+import android.util.Log
 import com.rk.openweatherapp.common.Resource
 import com.rk.openweatherapp.data.remote.OpenWeatherApi
 import com.rk.openweatherapp.data.remote.dto.CityInfoDto
@@ -19,40 +20,32 @@ class WeatherRepositoryImpl @Inject constructor(
         return api.getCityInfo(city = city)
     }
 
-    override suspend fun getWeatherList(lat: Double, lon: Double): List<Weather> {
-        // Fetch the weather data from the API
-        val weatherResponseDto = api.getWeatherList(lat, lon)
-        // Directly map WeatherResponseDto to Weather using the toWeather() function
-        return listOf(weatherResponseDto.toWeather()) // Wrap the result in a list
-    }
-
-    override suspend fun getWeatherByCity(city: String): Flow<Resource<List<Weather>>> {
+    override suspend fun getWeatherByCity(city: String): Flow<Resource<List<Weather>>>{
         return flow {
             try {
                 emit(Resource.Loading())  // Emit loading state
-                val response = api.getCityInfo(city)  // API call to get city weather
-                val weatherList = response.list.map { it.toWeather() }  // Convert each WeatherResponseDto to Weather
-                emit(Resource.Success(weatherList))  // Emit success state with weather data
+                val response = api.getWeatherByCity(city)
+                Log.d("WeatherApp", "City: ${response.name}")
+                Log.d("WeatherApp", "Weather API response: $response")
+
+                val weatherList = response.toWeather()   // Convert each WeatherResponseDto to Weather
+                emit(Resource.Success(listOf(weatherList)))  // Emit success state with weather data
             } catch (e: Exception) {
                 emit(Resource.Error("Failed to fetch weather: ${e.message}"))  // Emit error state
             }
         }
     }
-    suspend fun getCityForecast(city: String): Resource<List<Weather>> {
-        return try {
-            val response = api.getCityInfo(city)
-            Resource.Success(response.list.map { it.toWeather() }) // Map the list of `WeatherResponseDto` to `Weather`
-        } catch (e: Exception) {
-            Resource.Error("Failed to fetch city forecast")
-        }
-    }
 
-    suspend fun getCurrentWeatherByCity(city: String): Resource<Weather> {
-        return try {
-            val response = api.getWeatherByCity(city)
-            Resource.Success(response.toWeather())
-        } catch (e: Exception) {
-            Resource.Error("Failed to fetch current weather")
+    override suspend fun getWeatherList(lat: Double, lon: Double): Flow<Resource<List<Weather>>> {
+        return flow {
+            try {
+                emit(Resource.Loading())  // Emit loading state
+                val response = api.getWeatherList(lat, lon)
+                val weatherList = listOf(response.toWeather())  // Convert the WeatherResponseDto to Weather
+                emit(Resource.Success(weatherList))  // Emit success state with weather data
+            } catch (e: Exception) {
+                emit(Resource.Error("Failed to fetch weather: ${e.message}"))  // Emit error state
+            }
         }
     }
 

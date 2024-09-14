@@ -10,31 +10,45 @@ import java.io.IOException
 import javax.inject.Inject
 
 
+
 class GetWeatherListUseCase @Inject constructor(
     private val repository: WeatherRepository
 ) {
-
     suspend fun getWeatherByCity(city: String): Flow<Resource<List<Weather>>> {
         return repository.getWeatherByCity(city)
     }
 
-   /* operator fun invoke(lat: Double, lon: Double): Flow<Resource<List<Weather>>> = flow {
-        try {
-            emit(Resource.Loading<List<Weather>>())
-            // Fetch the list of Weather directly from the repository
-            val weatherList = repository.getWeatherList(lat, lon)
-            emit(Resource.Success(weatherList))
-        } catch (e: HttpException) {
-            emit(
-                Resource.Error<List<Weather>>(
-                    e.localizedMessage ?: "An unexpected error occurred"
-                )
-            )
-        } catch (e: IOException) {
-            emit(Resource.Error<List<Weather>>("Couldn't reach server. Check your internet connection"))
-        }
-    } */
+    suspend fun getWeatherByLatLon(lat: Double, lon: Double): Flow<Resource<List<Weather>>> {
+        return repository.getWeatherList(lat, lon)
+    }
 }
 
 
+
+/*
+class GetWeatherListUseCase @Inject constructor(
+private val repository: WeatherRepository
+) {
+
+suspend fun getWeatherByCity(city: String): Flow<Resource<List<Weather>>> {
+    return repository.getWeatherByCity(city)
+}
+
+operator fun invoke(lat: Double, lon: Double): Flow<Resource<List<Weather>>> = flow {
+     try {
+         emit(Resource.Loading<List<Weather>>())
+         // Fetch the list of Weather directly from the repository
+         val weatherList = repository.getWeatherList(lat, lon)
+         emit(Resource.Success(weatherList))
+     } catch (e: HttpException) {
+         emit(
+             Resource.Error<List<Weather>>(
+                 e.localizedMessage ?: "An unexpected error occurred"
+             )
+         )
+     } catch (e: IOException) {
+         emit(Resource.Error<List<Weather>>("Couldn't reach server. Check your internet connection"))
+     }
+ }
+}*/
 

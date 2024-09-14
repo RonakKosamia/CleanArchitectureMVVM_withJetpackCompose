@@ -16,15 +16,29 @@ class GetWeatherDetailUseCase @Inject constructor(
     operator fun invoke(lat: Double, lon: Double, date: Int): Flow<Resource<Weather>> = flow {
         try {
             emit(Resource.Loading<Weather>())
-            // Fetch the weather list based on latitude and longitude
-            val weatherList = repository.getWeatherList(lat, lon)
-            // Find the weather object with the matching date
-            val weather = weatherList.find { it.dt == date }
-            // Handle the case where weather might be null
-            if (weather != null) {
-                emit(Resource.Success(weather))
-            } else {
-                emit(Resource.Error<Weather>("Weather data for the given date not found"))
+
+            // Collect the flow emitted by the repository
+            repository.getWeatherList(lat, lon).collect { resource ->
+                when (resource) {
+                    is Resource.Success -> {
+                        // Extract the weather list and apply find
+                        val weatherList = resource.data
+                        val weather = weatherList?.find { it.dt == date }
+
+                        // Emit success if found, else emit error
+                        if (weather != null) {
+                            emit(Resource.Success(weather))
+                        } else {
+                            emit(Resource.Error<Weather>("Weather data for the given date not found"))
+                        }
+                    }
+                    is Resource.Error -> {
+                        emit(Resource.Error<Weather>(resource.message ?: "An unexpected error occurred"))
+                    }
+                    is Resource.Loading -> {
+                        emit(Resource.Loading<Weather>())
+                    }
+                }
             }
         } catch (e: HttpException) {
             emit(Resource.Error<Weather>(e.localizedMessage ?: "An unexpected error occurred"))
@@ -33,3 +47,4 @@ class GetWeatherDetailUseCase @Inject constructor(
         }
     }
 }
+
