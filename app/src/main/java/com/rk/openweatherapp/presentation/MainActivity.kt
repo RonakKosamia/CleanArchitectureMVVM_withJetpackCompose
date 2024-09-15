@@ -12,8 +12,6 @@ import com.rk.openweatherapp.presentation.weather_list.WeatherListScreen
 import com.rk.openweatherapp.presentation.weather_detail.WeatherDetailScreen
 import dagger.hilt.android.AndroidEntryPoint
 
-
-
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
 
@@ -29,16 +27,16 @@ class MainActivity : ComponentActivity() {
     fun MainScreen(navController: NavHostController) {
         NavHost(navController = navController, startDestination = "weatherList") {
             composable("weatherList") {
-                WeatherListScreen(navController)
+                WeatherListScreen(navController)  // Pass the navController to WeatherListScreen
             }
             composable("weatherDetail/{lat}/{lon}/{dt}") { backStackEntry ->
-                val lat = backStackEntry.arguments?.getString("lat")?.toDoubleOrNull()
-                val lon = backStackEntry.arguments?.getString("lon")?.toDoubleOrNull()
-                val dt = backStackEntry.arguments?.getString("dt")?.toInt()
-                if (lat != null && lon != null && dt !=null) {
-                    WeatherDetailScreen(navController, lat, lon, dt)
-                }
+                val lat = backStackEntry.arguments?.getString("lat")?.toDouble() ?: 0.0
+                val lon = backStackEntry.arguments?.getString("lon")?.toDouble() ?: 0.0
+                val dt = backStackEntry.arguments?.getString("dt")?.toInt() ?: 0
+                // Pass the navController to WeatherDetailScreen
+                WeatherDetailScreen(navController = navController, lat = lat, lon = lon, dt = dt)
             }
         }
     }
+
 }

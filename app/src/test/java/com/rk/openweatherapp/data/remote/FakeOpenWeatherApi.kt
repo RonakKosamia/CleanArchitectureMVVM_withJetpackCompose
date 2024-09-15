@@ -19,6 +19,12 @@ class FakeOpenWeatherApi : OpenWeatherApi {
     private var cityInfoDto: CityInfoDto? = null
     private var weatherResponseDto: WeatherResponseDto? = null
 
+    // Error flags to simulate failure cases
+    private var throwCityInfoError: Boolean = false
+    private var throwWeatherError: Boolean = false
+
+
+
     // Initialize fake city info data
     fun initCityInfoDto(cityInfoDto: CityInfoDto) {
         this.cityInfoDto = cityInfoDto
@@ -26,6 +32,7 @@ class FakeOpenWeatherApi : OpenWeatherApi {
 
     // Initialize fake weather response data
     fun initWeatherResponseDto(weatherResponseDto: WeatherResponseDto) {
+
         this.weatherResponseDto = weatherResponseDto
     }
 
@@ -37,8 +44,8 @@ class FakeOpenWeatherApi : OpenWeatherApi {
         count: Int,
         apiKey: String
     ): CityInfoDto {
-        // Returning a predefined cityInfoDto for testing
-        return cityInfoDto ?: throw Exception("CityInfoDto not initialized")
+        if (throwCityInfoError) throw FakeApiException("Simulated CityInfo API Error")
+        return cityInfoDto ?: throw FakeApiException("CityInfoDto not initialized")
     }
 
     // Simulated API call for fetching weather data based on lat/lon
@@ -47,7 +54,32 @@ class FakeOpenWeatherApi : OpenWeatherApi {
         lon: Double,
         apiKey: String
     ): WeatherResponseDto {
-        // Returning a predefined weatherResponseDto for testing
-        return weatherResponseDto ?: throw Exception("WeatherResponseDto not initialized")
+        if (throwWeatherError) throw FakeApiException("Simulated Weather API Error")
+        return weatherResponseDto ?: throw FakeApiException("WeatherResponseDto not initialized")
     }
+
+    // Simulated API call for fetching weather by city name
+    override suspend fun getWeatherByCity(city: String, apiKey: String): WeatherResponseDto {
+        if (throwWeatherError) throw FakeApiException("Simulated WeatherByCity API Error")
+        return weatherResponseDto ?: throw FakeApiException("WeatherResponseDto not initialized")
+    }
+
+    // Methods to simulate error states in tests
+    fun simulateCityInfoError() {
+        throwCityInfoError = true
+    }
+
+    fun simulateWeatherError() {
+        throwWeatherError = true
+    }
+
+    // Reset error states for testing different scenarios
+    fun resetErrors() {
+        throwCityInfoError = false
+        throwWeatherError = false
+    }
+
+    // Custom exception for fake API errors
+    class FakeApiException(message: String) : Exception(message)
 }
+

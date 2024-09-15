@@ -25,7 +25,7 @@ class GetWeatherListUseCaseTest {
     }
 
     @Test
-    fun `Should return weatherDtoList successfully`() = runBlockingTest {
+    fun `Should return weatherDtoList successfully by city`() = runBlockingTest {
         val weatherDtoList = generateWeatherDtoList()
         val weatherList = weatherDtoList.map { it.toWeather() }
         val expectedResult = flow<Resource<List<Weather>>> {
@@ -35,7 +35,26 @@ class GetWeatherListUseCaseTest {
 
         fakeWeatherRepository.initList(weatherDtoList)
 
-        val result = getWeatherListUseCase.invoke(10.0, -15.0)
+        // Update to fetch weather by city
+        val result = getWeatherListUseCase.getWeatherByCity("London")
+
+        result.first().data.`should be equal to`(expectedResult.first().data)
+        result.last().data.`should be equal to`(expectedResult.last().data)
+    }
+
+    @Test
+    fun `Should return weatherDtoList successfully by lat and lon`() = runBlockingTest {
+        val weatherDtoList = generateWeatherDtoList()
+        val weatherList = weatherDtoList.map { it.toWeather() }
+        val expectedResult = flow<Resource<List<Weather>>> {
+            emit(Resource.Loading<List<Weather>>())
+            emit(Resource.Success<List<Weather>>(weatherList))
+        }
+
+        fakeWeatherRepository.initList(weatherDtoList)
+
+        // Update to fetch weather by lat/lon
+        val result = getWeatherListUseCase.getWeatherByLatLon(10.0, -15.0)
 
         result.first().data.`should be equal to`(expectedResult.first().data)
         result.last().data.`should be equal to`(expectedResult.last().data)
@@ -51,7 +70,8 @@ class GetWeatherListUseCaseTest {
         fakeWeatherRepository.setShouldReturnNetworkError(true)
 
         try {
-            val result = getWeatherListUseCase.invoke(10.00, -10.00)
+            // Update to fetch weather by lat/lon
+            val result = getWeatherListUseCase.getWeatherByLatLon(10.00, -10.00)
             result.first().data.`should be equal to`(expectedResult.first().data)
             result.last().data.`should be equal to`(expectedResult.last().data)
             result.first().message.`should be equal to`(expectedResult.first().message)

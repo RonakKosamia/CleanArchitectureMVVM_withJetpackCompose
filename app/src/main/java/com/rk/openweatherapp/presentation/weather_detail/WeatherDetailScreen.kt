@@ -9,6 +9,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.rk.openweatherapp.domain.model.Weather
+
 @Composable
 fun WeatherDetailScreen(
     navController: NavController,
@@ -31,19 +32,13 @@ fun WeatherDetailScreen(
         contentAlignment = Alignment.Center
     ) {
         when {
-            state.isLoading -> {
-                CircularProgressIndicator()
-            }
-            state.error.isNotEmpty() -> {
-                Text(
-                    text = state.error,
-                    color = MaterialTheme.colors.error,
-                    modifier = Modifier.padding(16.dp)
-                )
-            }
-            state.weather != null -> {
-                WeatherDetailContent(weather = state.weather!!)
-            }
+            state.isLoading -> CircularProgressIndicator()
+            state.error.isNotEmpty() -> Text(
+                text = state.error,
+                color = MaterialTheme.colors.error,
+                modifier = Modifier.padding(16.dp)
+            )
+            state.weather != null -> WeatherDetailContent(weather = state.weather!!)
         }
     }
 }
