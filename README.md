@@ -2,6 +2,9 @@
 
 ## Demo
 
+![Test](https://github.com/user-attachments/assets/4edfe658-27fe-46de-bb04-5f2330b85bc6)
+
+
 ## Features
 
 - Fetching detail info about each forecast
@@ -18,6 +21,8 @@
   Hilt
   - Navigation
   Jetpack navigation
-  - 
+  - Image loading
+    Coin lib (compose asyncImage)
+    
 ## IDE Version
 Android Studio Koala Feature Drop | 2024.1.2
