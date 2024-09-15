@@ -21,6 +21,8 @@
   Hilt
   - Navigation
   Jetpack navigation
+  - Image loading
+    Coin lib (compose asyncImage)
     
 ## IDE Version
 Android Studio Koala Feature Drop | 2024.1.2
