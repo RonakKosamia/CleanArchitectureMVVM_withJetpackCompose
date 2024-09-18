@@ -8,7 +8,7 @@ import com.rk.openweatherapp.generateWeatherDtoList
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.last
-import kotlinx.coroutines.test.runBlockingTest
+import kotlinx.coroutines.test.runTest
 import org.amshove.kluent.`should be equal to`
 import org.junit.Before
 import org.junit.Test
@@ -25,43 +25,56 @@ class GetWeatherListUseCaseTest {
     }
 
     @Test
-    fun `Should return weatherDtoList successfully by city`() = runBlockingTest {
+    fun `Should return weatherDtoList successfully by city`() = runTest {
         val weatherDtoList = generateWeatherDtoList()
         val weatherList = weatherDtoList.map { it.toWeather() }
-        val expectedResult = flow<Resource<List<Weather>>> {
-            emit(Resource.Loading<List<Weather>>())
-            emit(Resource.Success<List<Weather>>(weatherList))
-        }
 
+        // Expected result doesn't need instance comparison
+        val expectedResult = listOf(
+            Resource.Loading<List<Weather>>(),
+            Resource.Success<List<Weather>>(weatherList)
+        )
+
+        // Initialize the repository with the fake weather data
         fakeWeatherRepository.initList(weatherDtoList)
 
-        // Update to fetch weather by city
-        val result = getWeatherListUseCase.getWeatherByCity("London")
+        // Fetch weather by city
+        val result = mutableListOf<Resource<List<Weather>>>()
+        getWeatherListUseCase.getWeatherByCity("London").collect { result.add(it) }
 
-        result.first().data.`should be equal to`(expectedResult.first().data)
-        result.last().data.`should be equal to`(expectedResult.last().data)
+        // Compare the emitted results by checking the type instead of exact instance
+        result.first()::class `should be equal to` Resource.Loading::class
+        result.last().data `should be equal to` expectedResult.last().data
     }
 
+
     @Test
-    fun `Should return weatherDtoList successfully by lat and lon`() = runBlockingTest {
+    fun `Should return weatherDtoList successfully by lat and lon`() = runTest {
         val weatherDtoList = generateWeatherDtoList()
         val weatherList = weatherDtoList.map { it.toWeather() }
-        val expectedResult = flow<Resource<List<Weather>>> {
-            emit(Resource.Loading<List<Weather>>())
-            emit(Resource.Success<List<Weather>>(weatherList))
-        }
 
+        // Expected result for testing purposes
+        val expectedResult = listOf(
+            Resource.Loading<List<Weather>>(), // Loading state
+            Resource.Success<List<Weather>>(weatherList) // Success state
+        )
+
+        // Initialize the fake repository with the test weather data
         fakeWeatherRepository.initList(weatherDtoList)
 
-        // Update to fetch weather by lat/lon
-        val result = getWeatherListUseCase.getWeatherByLatLon(10.0, -15.0)
+        // Collect the emitted results from the use case
+        val result = mutableListOf<Resource<List<Weather>>>()
+        getWeatherListUseCase.getWeatherByLatLon(10.0, -15.0).collect { result.add(it) }
 
-        result.first().data.`should be equal to`(expectedResult.first().data)
-        result.last().data.`should be equal to`(expectedResult.last().data)
+        // Compare the emitted results by type for the loading state
+        result.first()::class `should be equal to` Resource.Loading::class
+        // Compare the actual data in the success state
+        result.last().data `should be equal to` expectedResult.last().data
     }
 
+
     @Test
-    fun `Should return exception when getting weatherList is unsuccessful`() = runBlockingTest {
+    fun `Should return exception when getting weatherList is unsuccessful`() = runTest {
         val expectedResult = flow<Resource<List<Weather>>> {
             emit(Resource.Loading<List<Weather>>())
             emit(Resource.Error<List<Weather>>("Couldn't reach server. Check your internet connection"))
