@@ -24,7 +24,6 @@ class WeatherListViewModel @Inject constructor(
     private val preferences: SharedPreferences // Injected SharedPreferences for saving the last searched city
 ) : ViewModel() {
 
-    // Initialize MutableStateFlows properly
     private val _state = MutableStateFlow<WeatherListState>(WeatherListState.Idle)
     val state: StateFlow<WeatherListState> = _state.asStateFlow()
 
@@ -34,35 +33,26 @@ class WeatherListViewModel @Inject constructor(
     private val _cityName = MutableStateFlow("Unknown City")
     val cityName: StateFlow<String> = _cityName.asStateFlow()
 
-//    // init block where we load the last city
-//    init {
-//        // Load the last searched city when ViewModel is initialized
-//        loadLastCity()
-//    }
+    fun isLastCityEmpty(): Boolean {
+        return preferences.getString("last_city", null).isNullOrEmpty()
+    }
 
     // Load the last searched city from SharedPreferences
     fun loadLastCity() {
-        preferences.getString("last_city", "Atlanta,USA")?.let { lastCity ->
-            // Only update if lastCity is not null or empty
+        preferences.getString("last_city", null)?.let { lastCity ->
             if (lastCity.isNotEmpty()) {
                 _searchQuery.value = lastCity
                 _cityName.value = lastCity
-                // Fetch weather for the last city
                 fetchWeatherByCity(lastCity)
             }
         }
     }
 
-
-    // ViewModel Function to Fetch Weather by City
+    // Fetch weather by city name
     fun fetchWeatherByCity(city: String) {
-        Log.d("WeatherApp", "Fetching weather for $city")
         viewModelScope.launch(Dispatchers.IO) {
-            // Set loading state
             _state.value = WeatherListState.Loading
-            saveLastCity(city) // Save the city to preferences
-
-            // Collect weather data
+            saveLastCity(city)
             getWeatherListUseCase.getWeatherByCity(city).collect { resource ->
                 when (resource) {
                     is Resource.Loading -> _state.value = WeatherListState.Loading
@@ -92,10 +82,14 @@ class WeatherListViewModel @Inject constructor(
     // Save the last searched city in SharedPreferences
     fun saveLastCity(city: String) {
         preferences.edit().putString("last_city", city).apply()
-        _cityName.value = city
     }
 
-    // Function to update search query
+    // Clear preferences when the app is closed
+    fun clearLastCity() {
+        preferences.edit().remove("last_city").apply()
+    }
+
+    // Update search query
     fun updateSearchQuery(query: String) {
         _searchQuery.value = query
     }
@@ -106,6 +100,7 @@ class WeatherListViewModel @Inject constructor(
         return String.format("%.2f", value).toDouble()
     }
 }
+
 
 
 

@@ -42,8 +42,8 @@ fun WeatherListScreen(
     val searchQuery by viewModel.searchQuery.collectAsState()
     val cityName by viewModel.cityName.collectAsState()
     val context = LocalContext.current
-    // Track permission status
     var hasLocationPermission by remember { mutableStateOf(false) }
+    var isFirstLaunch by remember { mutableStateOf(true) } // Track if it's the first launch
 
     // Launch location permission request
     val permissionLauncher = rememberLauncherForActivityResult(
@@ -53,7 +53,7 @@ fun WeatherListScreen(
                 || permissions[Manifest.permission.ACCESS_COARSE_LOCATION] == true
     }
 
-    // Request permissions when the screen is launched
+    // On first launch, check if the app has location permission and load the last searched city or current location.
     LaunchedEffect(Unit) {
         permissionLauncher.launch(
             arrayOf(
@@ -61,11 +61,17 @@ fun WeatherListScreen(
                 Manifest.permission.ACCESS_COARSE_LOCATION
             )
         )
+        // If this is the first launch and no last city is found, fetch weather based on location
+        if (isFirstLaunch) {
+            viewModel.loadLastCity()
+        }
     }
-    // Fetch the current location if permission is granted
+
+    // Fetch current location if it's the first launch and no last city exists
     LaunchedEffect(hasLocationPermission) {
-        if (hasLocationPermission) {
+        if (isFirstLaunch && hasLocationPermission && viewModel.isLastCityEmpty()) {
             fetchCurrentLocation(viewModel, context)
+            isFirstLaunch = false
         }
     }
 
@@ -81,7 +87,6 @@ fun WeatherListScreen(
                 onDone = {
                     if (searchQuery.isNotEmpty()) {
                         viewModel.fetchWeatherByCity(searchQuery)
-//                        viewModel.saveLastCity(searchQuery)
                     }
                 }
             ),
@@ -98,17 +103,14 @@ fun WeatherListScreen(
         // Handle UI based on current state
         when (val currentState = state) {
             is WeatherListState.Idle -> {
-                // Initially or when no search is made, display a prompt to the user
                 Text("Please enter a city name to search.", modifier = Modifier.padding(16.dp))
             }
             is WeatherListState.Loading -> {
-                // Display the spinner while data is loading
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     CircularProgressIndicator()
                 }
             }
             is WeatherListState.Success -> {
-                // Display the weather data in a LazyColumn
                 if (currentState.weatherList.isNotEmpty()) {
                     LazyColumn {
                         items(currentState.weatherList) { weather ->
@@ -117,7 +119,9 @@ fun WeatherListScreen(
                                 temperature = "${weather.currentTemp}°C",
                                 icon = weather.icon,
                                 onClick = {
-                                    navController.navigate("weatherDetail/${weather.lat}/${weather.lon}/${weather.dt}/${weather.day}/${weather.night}/${weather.feelsLike}/${weather.pressure}/${weather.humidity}/${weather.title}/${weather.description}")
+                                    navController.navigate(
+                                        "weatherDetail/${weather.lat}/${weather.lon}/${weather.dt}/${weather.day}/${weather.night}/${weather.feelsLike}/${weather.pressure}/${weather.humidity}/${weather.title}/${weather.description}"
+                                    )
                                 }
                             )
                         }
@@ -127,7 +131,6 @@ fun WeatherListScreen(
                 }
             }
             is WeatherListState.Error -> {
-                // Display the error message if an error occurred
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     Text("Error: ${currentState.message}", color = MaterialTheme.colors.error)
                 }
@@ -139,8 +142,8 @@ fun WeatherListScreen(
 // Function to fetch the user's current location
 fun fetchCurrentLocation(viewModel: WeatherListViewModel, context: Context) {
     val fusedLocationClient = LocationServices.getFusedLocationProviderClient(context)
-    if (ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) == android.content.pm.PackageManager.PERMISSION_GRANTED ||
-        ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION) == android.content.pm.PackageManager.PERMISSION_GRANTED
+    if (ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED ||
+        ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED
     ) {
         fusedLocationClient.lastLocation.addOnSuccessListener { location ->
             if (location != null) {
@@ -162,3 +165,21 @@ fun fetchCurrentLocation(viewModel: WeatherListViewModel, context: Context) {
         Toast.makeText(context, "Location permission denied", Toast.LENGTH_SHORT).show()
     }
 }
+
+
+/*
+
+isFirstLaunch tracking:
+This ensures we only fetch the current location on the first launch.
+When the user navigates back to the search screen from the details screen,
+it won’t call the current location again.
+isLastCityEmpty():
+This function checks if the last searched city exists in the preferences.
+If it's empty, we fetch the current location.
+clearLastCity():
+
+This function clears the stored last searched city when the app closes.
+You should call this method in an appropriate lifecycle-aware component,
+like in onDestroy or in an activity's onPause method if you want to clear the data when the app is minimized or closed.
+
+*/

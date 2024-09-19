@@ -1,6 +1,7 @@
 package com.rk.openweatherapp.presentation.weather_detail
 
 import android.annotation.SuppressLint
+import android.util.Log
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.*
 import androidx.compose.runtime.Composable
@@ -82,9 +83,11 @@ private fun formatToTwoDecimal(kelvin: Double): Double {
 
 @Composable
 fun WeatherDetailContent(weather: Weather) {
-    val dayTemp = formatToTwoDecimal(weather.day)
-    val nightTemp = formatToTwoDecimal(weather.night)
-    val feelsLikeTemp = formatToTwoDecimal(weather.feelsLike)
+    Log.d("WeatherDetailContent", "WeatherDetailContent by API" )
+    // Use the temperature values directly as they are in Celsius when `units=metric` is used.
+    val dayTemp = formatToTwoDecimal(weather.day) // Day temperature
+    val nightTemp = formatToTwoDecimal(weather.night) // Night temperature
+    val feelsLikeTemp = formatToTwoDecimal(weather.feelsLike) // Feels like temperature
 
     Column(
         modifier = Modifier
@@ -126,6 +129,7 @@ fun WeatherDetailContent(weather: Weather) {
         )
     }
 }
+
 
 @Composable
 fun WeatherDetailContentFallback(
