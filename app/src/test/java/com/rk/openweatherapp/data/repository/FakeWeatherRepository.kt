@@ -1,14 +1,13 @@
 package com.rk.openweatherapp.data.repository
 
 import com.rk.openweatherapp.common.Resource
-import com.rk.openweatherapp.data.remote.dto.CityInfoDto
+import com.rk.openweatherapp.data.remote.dto.ForecastWeatherResponseDto
 import com.rk.openweatherapp.data.remote.dto.WeatherResponseDto
 import com.rk.openweatherapp.data.remote.dto.toWeather
 import com.rk.openweatherapp.domain.model.Weather
 import com.rk.openweatherapp.domain.repository.WeatherRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
-import java.io.IOException
 
 
 class FakeWeatherRepository : WeatherRepository {
@@ -36,7 +35,7 @@ class FakeWeatherRepository : WeatherRepository {
         }
     }
 
-    override suspend fun fetchCityWeather(city: String): CityInfoDto {
+    override suspend fun fetchCityWeather(city: String): ForecastWeatherResponseDto {
         TODO("Not yet implemented")
     }
 

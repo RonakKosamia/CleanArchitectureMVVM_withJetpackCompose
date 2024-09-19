@@ -22,3 +22,8 @@
 
 -keep class coil.** { *; }
 -keep interface coil.** { *; }
+
+# OkHttp logging
+-dontwarn okhttp3.logging.**
+-keep class okhttp3.logging.** { *; }
+

@@ -1,0 +1,6 @@
+<!-- ic_placeholder.xml -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android">
+    <solid android:color="#E0E0E0"/> <!-- Light gray color -->
+    <size android:width="48dp" android:height="48dp"/>
+    <corners android:radius="24dp"/> <!-- Makes it a circle -->
+</shape>

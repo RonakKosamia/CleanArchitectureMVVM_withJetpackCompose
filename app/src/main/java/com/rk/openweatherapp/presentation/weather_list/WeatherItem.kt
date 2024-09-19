@@ -37,7 +37,7 @@ fun WeatherItem(
             modifier = Modifier.size(48.dp)
         )
         Spacer(modifier = Modifier.width(8.dp))
-        Text(text = temperature, style = MaterialTheme.typography.h4)
+        Text(text = temperature, style = MaterialTheme.typography.body1)
     }
 }
 

@@ -20,7 +20,7 @@ class WeatherRepositoryImplTest {
     private lateinit var weatherRepositoryImpl: WeatherRepositoryImpl
     private lateinit var fakeOpenWeatherApi: FakeOpenWeatherApi
 
-    val testWeatherResponseDto = WeatherResponseDto(
+    private val testWeatherResponseDto = WeatherResponseDto(
         coord = CoordDto(lon = -0.1257, lat = 51.5085),
         weather = listOf(WeatherInfoDto(main = "Clouds", description = "overcast clouds", icon = "04n", id = 0)),
         main = TempDto(

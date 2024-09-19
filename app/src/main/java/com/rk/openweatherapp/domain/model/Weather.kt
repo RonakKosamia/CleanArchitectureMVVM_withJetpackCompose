@@ -1,5 +1,8 @@
 package com.rk.openweatherapp.domain.model
 
+import android.os.Parcelable
+import kotlinx.parcelize.Parcelize
+
 // Domain model for Weather used in your app
 data class Weather(
     val dt: Int,
@@ -15,3 +18,19 @@ data class Weather(
     val lat: Double, // Latitude
     val lon: Double  // Longitude
 )
+
+//@Parcelize
+//data class Weather(
+//    val dt: Int,
+//    val day: Double,
+//    val night: Double,
+//    val title: String,
+//    val description: String,
+//    val icon: String,
+//    val currentTemp: Double,
+//    val feelsLike: Double,
+//    val pressure: Int,
+//    val humidity: Int,
+//    val lat: Double,
+//    val lon: Double
+//) : Parcelable

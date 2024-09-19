@@ -4,6 +4,7 @@ import android.Manifest
 import android.content.Context
 import android.content.pm.PackageManager
 import android.location.Geocoder
+import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
@@ -13,9 +14,13 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -27,26 +32,45 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.google.android.gms.location.LocationServices
 import java.util.Locale
 
-
 @Composable
 fun WeatherListScreen(
     navController: NavController,
     viewModel: WeatherListViewModel = hiltViewModel()
 ) {
-    val context = LocalContext.current
+
     val state by viewModel.state.collectAsState()
     val searchQuery by viewModel.searchQuery.collectAsState()
-
-    // Use collectAsState to observe the city name properly
     val cityName by viewModel.cityName.collectAsState()
+    val context = LocalContext.current
+    // Track permission status
+    var hasLocationPermission by remember { mutableStateOf(false) }
 
-    // Request location and handle permission results
-    RequestLocationPermission(
-        onPermissionGranted = { fetchCurrentLocation(viewModel, context) },
-        onPermissionDenied = { viewModel.fetchLastCity() }
-    )
+    // Launch location permission request
+    val permissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestMultiplePermissions()
+    ) { permissions ->
+        hasLocationPermission = permissions[Manifest.permission.ACCESS_FINE_LOCATION] == true
+                || permissions[Manifest.permission.ACCESS_COARSE_LOCATION] == true
+    }
 
-    Column(modifier = Modifier.fillMaxSize()) {
+    // Request permissions when the screen is launched
+    LaunchedEffect(Unit) {
+        permissionLauncher.launch(
+            arrayOf(
+                Manifest.permission.ACCESS_FINE_LOCATION,
+                Manifest.permission.ACCESS_COARSE_LOCATION
+            )
+        )
+    }
+    // Fetch the current location if permission is granted
+    LaunchedEffect(hasLocationPermission) {
+        if (hasLocationPermission) {
+            fetchCurrentLocation(viewModel, context)
+        }
+    }
+
+    Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
+        // TextField for city search input
         OutlinedTextField(
             value = searchQuery,
             onValueChange = { viewModel.updateSearchQuery(it) },
@@ -57,28 +81,34 @@ fun WeatherListScreen(
                 onDone = {
                     if (searchQuery.isNotEmpty()) {
                         viewModel.fetchWeatherByCity(searchQuery)
-                        viewModel.saveLastCity(searchQuery)
+//                        viewModel.saveLastCity(searchQuery)
                     }
                 }
             ),
             keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Done)
         )
 
-        // Use the collected cityName state in your Text composable
+        // Display current city being searched for
         Text(
             text = "Searching weather for: $cityName",
             style = MaterialTheme.typography.h6,
             modifier = Modifier.padding(8.dp)
         )
 
-        // Handle different UI states
+        // Handle UI based on current state
         when (val currentState = state) {
+            is WeatherListState.Idle -> {
+                // Initially or when no search is made, display a prompt to the user
+                Text("Please enter a city name to search.", modifier = Modifier.padding(16.dp))
+            }
             is WeatherListState.Loading -> {
+                // Display the spinner while data is loading
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     CircularProgressIndicator()
                 }
             }
             is WeatherListState.Success -> {
+                // Display the weather data in a LazyColumn
                 if (currentState.weatherList.isNotEmpty()) {
                     LazyColumn {
                         items(currentState.weatherList) { weather ->
@@ -87,7 +117,7 @@ fun WeatherListScreen(
                                 temperature = "${weather.currentTemp}°C",
                                 icon = weather.icon,
                                 onClick = {
-                                    navController.navigate("weatherDetail/${weather.lat}/${weather.lon}/${weather.dt}")
+                                    navController.navigate("weatherDetail/${weather.lat}/${weather.lon}/${weather.dt}/${weather.day}/${weather.night}/${weather.feelsLike}/${weather.pressure}/${weather.humidity}/${weather.title}/${weather.description}")
                                 }
                             )
                         }
@@ -97,6 +127,7 @@ fun WeatherListScreen(
                 }
             }
             is WeatherListState.Error -> {
+                // Display the error message if an error occurred
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     Text("Error: ${currentState.message}", color = MaterialTheme.colors.error)
                 }
@@ -105,57 +136,29 @@ fun WeatherListScreen(
     }
 }
 
-
+// Function to fetch the user's current location
 fun fetchCurrentLocation(viewModel: WeatherListViewModel, context: Context) {
-    if (ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED ||
-        ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED
+    val fusedLocationClient = LocationServices.getFusedLocationProviderClient(context)
+    if (ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) == android.content.pm.PackageManager.PERMISSION_GRANTED ||
+        ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION) == android.content.pm.PackageManager.PERMISSION_GRANTED
     ) {
-        val fusedLocationClient = LocationServices.getFusedLocationProviderClient(context)
         fusedLocationClient.lastLocation.addOnSuccessListener { location ->
             if (location != null) {
-                viewModel.getWeather(location.latitude, location.longitude)
-
-                // Reverse geocoding to fetch city name from latitude and longitude
                 val geocoder = Geocoder(context, Locale.getDefault())
                 val addresses = geocoder.getFromLocation(location.latitude, location.longitude, 1)
                 if (!addresses.isNullOrEmpty()) {
-                    viewModel.updateCityName(addresses[0].locality ?: "Unknown City")
+                    val cityName = addresses[0].locality ?: "Unknown City"
+                    Toast.makeText(context, "Fetching weather for $cityName", Toast.LENGTH_SHORT).show()
+                    viewModel.fetchWeatherByCity(cityName)
+                    viewModel.saveLastCity(cityName)
+                } else {
+                    Toast.makeText(context, "Unable to get city name", Toast.LENGTH_SHORT).show()
                 }
             } else {
-                viewModel.fetchLastCity()
+                Toast.makeText(context, "Unable to get location", Toast.LENGTH_SHORT).show()
             }
         }
     } else {
-        viewModel.fetchLastCity()
+        Toast.makeText(context, "Location permission denied", Toast.LENGTH_SHORT).show()
     }
 }
-
-
-
-
-@Composable
-fun RequestLocationPermission(
-    onPermissionGranted: () -> Unit,
-    onPermissionDenied: () -> Unit
-) {
-    val permissionLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.RequestMultiplePermissions()
-    ) { permissions ->
-        val isGranted = permissions[Manifest.permission.ACCESS_FINE_LOCATION] ?: false
-        if (isGranted) {
-            onPermissionGranted()
-        } else {
-            onPermissionDenied()
-        }
-    }
-
-    SideEffect {
-        permissionLauncher.launch(
-            arrayOf(
-                Manifest.permission.ACCESS_FINE_LOCATION,
-                Manifest.permission.ACCESS_COARSE_LOCATION
-            )
-        )
-    }
-}
-

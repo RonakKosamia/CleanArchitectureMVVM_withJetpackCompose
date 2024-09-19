@@ -1,7 +1,8 @@
 package com.rk.openweatherapp.data.remote
 
-import com.rk.openweatherapp.data.remote.dto.CityInfoDto
+import com.rk.openweatherapp.data.remote.dto.ForecastWeatherResponseDto
 import com.rk.openweatherapp.data.remote.dto.WeatherResponseDto
+import retrofit2.http.Query
 
 /*
 *
@@ -16,7 +17,7 @@ import com.rk.openweatherapp.data.remote.dto.WeatherResponseDto
 class FakeOpenWeatherApi : OpenWeatherApi {
 
     // Fake data to simulate city info and weather responses
-    private var cityInfoDto: CityInfoDto? = null
+    private var cityInfoDto: ForecastWeatherResponseDto? = null
     private var weatherResponseDto: WeatherResponseDto? = null
 
     // Error flags to simulate failure cases
@@ -26,7 +27,7 @@ class FakeOpenWeatherApi : OpenWeatherApi {
 
 
     // Initialize fake city info data
-    fun initCityInfoDto(cityInfoDto: CityInfoDto) {
+    fun initCityInfoDto(cityInfoDto: ForecastWeatherResponseDto) {
         this.cityInfoDto = cityInfoDto
     }
 
@@ -43,7 +44,7 @@ class FakeOpenWeatherApi : OpenWeatherApi {
         units: String,
         count: Int,
         apiKey: String
-    ): CityInfoDto {
+    ): ForecastWeatherResponseDto {
         if (throwCityInfoError) throw FakeApiException("Simulated CityInfo API Error")
         return cityInfoDto ?: throw FakeApiException("CityInfoDto not initialized")
     }
@@ -59,7 +60,11 @@ class FakeOpenWeatherApi : OpenWeatherApi {
     }
 
     // Simulated API call for fetching weather by city name
-    override suspend fun getWeatherByCity(city: String, apiKey: String): WeatherResponseDto {
+    override suspend fun getWeatherByCity(
+        @Query(value = "q") city: String,
+        @Query(value = "units") units: String,
+        @Query(value = "appid") apiKey: String
+    ): WeatherResponseDto {
         if (throwWeatherError) throw FakeApiException("Simulated WeatherByCity API Error")
         return weatherResponseDto ?: throw FakeApiException("WeatherResponseDto not initialized")
     }
