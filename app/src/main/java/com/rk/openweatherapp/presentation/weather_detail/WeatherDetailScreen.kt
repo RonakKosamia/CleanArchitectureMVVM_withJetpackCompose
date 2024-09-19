@@ -1,7 +1,6 @@
 package com.rk.openweatherapp.presentation.weather_detail
 
 import android.annotation.SuppressLint
-import android.util.Log
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.*
 import androidx.compose.runtime.Composable
@@ -10,12 +9,18 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
-import com.rk.openweatherapp.domain.model.Weather
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
+import coil.compose.AsyncImage
+import coil.compose.rememberImagePainter
+import com.rk.openweatherapp.R
 
 @Composable
 fun WeatherDetailScreen(
@@ -30,21 +35,38 @@ fun WeatherDetailScreen(
     humidity: Int,      // Humidity percentage
     title: String,      // Weather condition title
     description: String, // Weather condition description
+    iconCode: String,   // Weather icon code
     viewModel: WeatherDetailViewModel = hiltViewModel()
 ) {
     val state by viewModel.state.collectAsState()
-    val context = LocalContext.current // Get the context for Toast
 
     LaunchedEffect(Unit) {
-        viewModel.getWeatherBy(lat,lon,dt)
+        viewModel.getWeatherBy(lat, lon, dt)
+    }
+
+    val backgroundDrawable = when {
+        description.contains("cloud", ignoreCase = true) -> R.drawable.cloudy
+        description.contains("clear", ignoreCase = true) -> R.drawable.clearsky
+        description.contains("rain", ignoreCase = true) -> R.drawable.rainy
+        else -> R.drawable.clearsky // A default background if no match
     }
 
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .padding(16.dp),
-        contentAlignment = Alignment.Center
     ) {
+
+        // Background Image
+        Image(
+            painter = painterResource(id = backgroundDrawable),
+            contentDescription = null,
+            contentScale = ContentScale.Crop, // Makes the image fill the entire box
+            modifier = Modifier
+                .fillMaxSize()
+                .alpha(0.7f) // Adjust opacity to ensure content is visible
+        )
+
+
         when {
             state.isLoading -> CircularProgressIndicator()
 
@@ -56,12 +78,21 @@ fun WeatherDetailScreen(
                     pressure = pressure,
                     humidity = humidity,
                     title = title,
-                    description = description
+                    description = description,
+                    iconCode = iconCode
                 )
             }
 
             state.weather != null -> {
-                WeatherDetailContent(state.weather!!)
+                    WeatherDetailContent(
+                            temperature = state.weather!!.day,
+                            feelsLike = state.weather!!.feelsLike,
+                            pressure = state.weather!!.pressure,
+                            humidity = state.weather!!.humidity,
+                            description = state.weather!!.description,
+                            iconUrl = "https://openweathermap.org/img/wn/${state.weather!!.icon}@2x.png"
+                    )
+//                WeatherDetailContent(state.weather!!, iconCode)
             }
 
             else -> Text(
@@ -73,127 +104,178 @@ fun WeatherDetailScreen(
 }
 
 @SuppressLint("DefaultLocale")
-private fun formatToTwoDecimal(kelvin: Double): Double {
-    return String.format("%.2f", kelvin).toDouble()
-}
-//fun convertKelvinToCelsius(kelvin: Double): Double {
-//    return (kelvin - 273.15).toBigDecimal().setScale(2, java.math.RoundingMode.HALF_EVEN).toDouble()
-//}
-
-
 @Composable
-fun WeatherDetailContent(weather: Weather) {
-    Log.d("WeatherDetailContent", "WeatherDetailContent by API" )
-    // Use the temperature values directly as they are in Celsius when `units=metric` is used.
-    val dayTemp = formatToTwoDecimal(weather.day) // Day temperature
-    val nightTemp = formatToTwoDecimal(weather.night) // Night temperature
-    val feelsLikeTemp = formatToTwoDecimal(weather.feelsLike) // Feels like temperature
-
+fun WeatherDetailContent(
+    temperature: Double,
+    feelsLike: Double,
+    pressure: Int,
+    humidity: Int,
+    description: String,
+    iconUrl: String? = null
+) {
     Column(
         modifier = Modifier
-            .fillMaxWidth()
-            .padding(16.dp)
+            .fillMaxSize()
+            .padding(16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
     ) {
-        // Title and Description
+        // Weather Icon
+        iconUrl?.let {
+            AsyncImage(
+                model = it,
+                contentDescription = description,
+                modifier = Modifier.size(100.dp)
+            )
+        }
+
+        // Temperature
         Text(
-            text = weather.title,
-            style = MaterialTheme.typography.h4.copy(fontWeight = FontWeight.Bold),
-            modifier = Modifier.padding(bottom = 8.dp)
+            text = String.format("%.2f°C", temperature),
+            style = MaterialTheme.typography.h2,
+            fontWeight = FontWeight.Bold
         )
+
+        // Feels like
         Text(
-            text = weather.description.capitalize(),
+            text = "Feels like ${String.format("%.2f°C", feelsLike)}",
             style = MaterialTheme.typography.body1,
-            modifier = Modifier.padding(bottom = 16.dp)
+            modifier = Modifier.padding(vertical = 8.dp)
         )
 
-        // Temperature Overview
-        Divider(modifier = Modifier.padding(vertical = 8.dp))
-        Text(text = "Temperature Overview", style = MaterialTheme.typography.subtitle1, modifier = Modifier.padding(bottom = 8.dp))
+        // Weather description
+        Text(
+            text = description.capitalize(),
+            style = MaterialTheme.typography.h5,
+            fontWeight = FontWeight.Bold,
+            modifier = Modifier.padding(vertical = 8.dp)
+        )
 
+        Divider(modifier = Modifier.padding(vertical = 8.dp))
+
+        // Pressure and Humidity
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            TemperatureBox("Day", dayTemp)
-            TemperatureBox("Night", nightTemp)
+            Text(
+                text = "Pressure: ${pressure} hPa",
+                style = MaterialTheme.typography.body1
+            )
+            Text(
+                text = "Humidity: ${humidity}%",
+                style = MaterialTheme.typography.body1
+            )
         }
-
-        // Additional weather details
-        Divider(modifier = Modifier.padding(vertical = 8.dp))
-        Text(text = "Additional Information", style = MaterialTheme.typography.subtitle1, modifier = Modifier.padding(bottom = 8.dp))
-
-        AdditionalWeatherDetails(
-            feelsLike = feelsLikeTemp,
-            pressure = weather.pressure,
-            humidity = weather.humidity
-        )
     }
 }
-
 
 @Composable
 fun WeatherDetailContentFallback(
     day: Double,
     night: Double,
-    feelsLike: Double,  // Add feelsLike
-    pressure: Int,      // Add pressure
-    humidity: Int,      // Add humidity
+    feelsLike: Double,
+    pressure: Int,
+    humidity: Int,
     title: String,
-    description: String
+    description: String,
+    iconCode: String
 ) {
-    val dayTemp = formatToTwoDecimal(day)
-    val nightTemp = formatToTwoDecimal(night)
-    val feelsLikeTemp = formatToTwoDecimal(feelsLike)
-
     Column(
         modifier = Modifier
-            .fillMaxWidth()
-            .padding(16.dp)
+            .fillMaxSize()
+            .padding(16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
     ) {
-        // Title and Description
-        Text(
-            text = title,
-            style = MaterialTheme.typography.h4.copy(fontWeight = FontWeight.Bold),
-            modifier = Modifier.padding(bottom = 8.dp)
+        // Weather icon
+        val iconUrl = "https://openweathermap.org/img/wn/$iconCode@2x.png"
+        AsyncImage(
+            model = iconUrl,
+            contentDescription = title,
+            modifier = Modifier.size(100.dp)
         )
+
+        // Day Temperature
+        Text(
+            text = String.format("%.2f°C", day),
+            style = MaterialTheme.typography.h2,
+            fontWeight = FontWeight.Bold
+        )
+
+        // Feels like
+        Text(
+            text = "Feels like ${String.format("%.2f°C", feelsLike)}",
+            style = MaterialTheme.typography.body1,
+            modifier = Modifier.padding(vertical = 8.dp)
+        )
+
+        // Weather description
         Text(
             text = description.capitalize(),
-            style = MaterialTheme.typography.body1,
-            modifier = Modifier.padding(bottom = 16.dp)
+            style = MaterialTheme.typography.h5,
+            fontWeight = FontWeight.Bold,
+            modifier = Modifier.padding(vertical = 8.dp)
         )
 
-        // Temperature Overview
-        Text(text = "Temperature Overview", style = MaterialTheme.typography.subtitle1, modifier = Modifier.padding(bottom = 8.dp))
+        Divider(modifier = Modifier.padding(vertical = 8.dp))
 
+        // Pressure and Humidity
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            TemperatureBox("Day", dayTemp)
-            TemperatureBox("Night", nightTemp)
+            Text(
+                text = "Pressure: ${pressure} hPa",
+                style = MaterialTheme.typography.body1
+            )
+            Text(
+                text = "Humidity: ${humidity}%",
+                style = MaterialTheme.typography.body1
+            )
         }
-
-        // Additional weather details
-        Divider(modifier = Modifier.padding(vertical = 8.dp))
-        Text(text = "Additional Information", style = MaterialTheme.typography.subtitle1, modifier = Modifier.padding(bottom = 8.dp))
-
-        AdditionalWeatherDetails(
-            feelsLike = feelsLikeTemp,
-            pressure = pressure,
-            humidity = humidity
-        )
     }
 }
 
 
-
 @Composable
-fun TemperatureBox(label: String, temp: Double) {
+fun MainWeatherInfo(
+    temperature: Double,
+    feelsLike: Double,
+    description: String,
+    iconCode: String // Weather icon code from OpenWeatherMap
+) {
     Column(
+        modifier = Modifier.fillMaxWidth(),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Text(text = label, style = MaterialTheme.typography.body1)
-        Text(text = "$temp°C", style = MaterialTheme.typography.h5.copy(fontWeight = FontWeight.Bold))
+        // Weather icon from OpenWeatherMap
+        Image(
+            painter = rememberImagePainter("http://openweathermap.org/img/wn/$iconCode@2x.png"),
+            contentDescription = "Weather Icon",
+            modifier = Modifier.size(120.dp)
+        )
+
+        // Temperature
+        Text(
+            text = "${temperature}°C",
+            style = MaterialTheme.typography.h1.copy(fontWeight = FontWeight.Bold),
+            modifier = Modifier.padding(top = 8.dp)
+        )
+
+        // Feels like temperature
+        Text(
+            text = "Feels like ${feelsLike}°C",
+            style = MaterialTheme.typography.body1,
+            modifier = Modifier.padding(top = 4.dp)
+        )
+
+        // Weather description
+        Text(
+            text = description.capitalize(),
+            style = MaterialTheme.typography.h6,
+            modifier = Modifier.padding(top = 8.dp)
+        )
     }
 }
 
@@ -204,17 +286,15 @@ fun AdditionalWeatherDetails(feelsLike: Double, pressure: Int, humidity: Int) {
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            Text(text = "Feels Like: $feelsLike°C", style = MaterialTheme.typography.body1)
             Text(text = "Pressure: ${pressure} hPa", style = MaterialTheme.typography.body1)
-        }
-
-        Spacer(modifier = Modifier.height(8.dp))
-
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
             Text(text = "Humidity: ${humidity}%", style = MaterialTheme.typography.body1)
         }
     }
 }
+
+// Helper to format temperatures to two decimal points
+@SuppressLint("DefaultLocale")
+private fun formatToTwoDecimal(value: Double): Double {
+    return String.format("%.2f", value).toDouble()
+}
+

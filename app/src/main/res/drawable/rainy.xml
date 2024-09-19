@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="1080dp"
+    android:height="1920dp"
+    android:viewportWidth="1080"
+    android:viewportHeight="1920">
+
+    <path
+        android:fillColor="#455A64"
+        android:pathData="M0,0h1080v1920h-1080z" />
+    <!-- Raindrops -->
+    <path
+        android:fillColor="#90CAF9"
+        android:pathData="M250,600c20,-60,60,-60,80,0c20,60,-80,60,-80,0z" />
+    <path
+        android:fillColor="#90CAF9"
+        android:pathData="M450,800c20,-60,60,-60,80,0c20,60,-80,60,-80,0z" />
+    <path
+        android:fillColor="#90CAF9"
+        android:pathData="M750,500c20,-60,60,-60,80,0c20,60,-80,60,-80,0z" />
+    <path
+        android:fillColor="#90CAF9"
+        android:pathData="M550,1000c20,-60,60,-60,80,0c20,60,-80,60,-80,0z" />
+</vector>

@@ -34,7 +34,7 @@ class MainActivity : ComponentActivity() {
                 WeatherListScreen(navController)  // Pass the navController to WeatherListScreen
             }
 
-            composable("weatherDetail/{lat}/{lon}/{dt}/{day}/{night}/{feelsLike}/{pressure}/{humidity}/{title}/{description}",
+            composable("weatherDetail/{lat}/{lon}/{dt}/{day}/{night}/{feelsLike}/{pressure}/{humidity}/{title}/{description}/{icon}",
             ) { backStackEntry ->
                 val lat = backStackEntry.arguments?.getString("lat")?.toDoubleOrNull() ?: 0.0
                 val lon = backStackEntry.arguments?.getString("lon")?.toDoubleOrNull() ?: 0.0
@@ -46,11 +46,12 @@ class MainActivity : ComponentActivity() {
                 val humidity = backStackEntry.arguments?.getString("humidity")?.toIntOrNull() ?: 0
                 val title = backStackEntry.arguments?.getString("title") ?: ""
                 val description = backStackEntry.arguments?.getString("description") ?: ""
+                val icon = backStackEntry.arguments?.getString("icon") ?: ""
 
                 // Pass the navController to WeatherDetailScreen
                 WeatherDetailScreen(navController = navController,
                     lat = lat, lon = lon, dt = dt,
-                    day, night,feelsLike, pressure, humidity, title, description
+                    day, night,feelsLike, pressure, humidity, title, description, icon
                 )
             }
         }

@@ -120,7 +120,7 @@ fun WeatherListScreen(
                                 icon = weather.icon,
                                 onClick = {
                                     navController.navigate(
-                                        "weatherDetail/${weather.lat}/${weather.lon}/${weather.dt}/${weather.day}/${weather.night}/${weather.feelsLike}/${weather.pressure}/${weather.humidity}/${weather.title}/${weather.description}"
+                                        "weatherDetail/${weather.lat}/${weather.lon}/${weather.dt}/${weather.day}/${weather.night}/${weather.feelsLike}/${weather.pressure}/${weather.humidity}/${weather.title}/${weather.description}/${weather.icon}"
                                     )
                                 }
                             )
