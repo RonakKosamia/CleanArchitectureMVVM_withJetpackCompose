@@ -12,7 +12,7 @@
   - Coding Language
   Kotlin
   - Architecture Pattern
-  MVVM
+  MVVM+CleanArchitecture
   - Network library
   Retrofit
   - Unit test
@@ -23,6 +23,8 @@
   Jetpack navigation
   - Image loading
     Coin lib (compose asyncImage)
+  - Coroutines with flows
+
     
 ## IDE Version
 Android Studio Koala Feature Drop | 2024.1.2
