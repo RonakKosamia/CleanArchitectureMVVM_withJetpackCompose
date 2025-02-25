@@ -28,3 +28,11 @@
     
 ## IDE Version
 Android Studio Koala Feature Drop | 2024.1.2
+
+
+# OpenWeatherAPIIntegration_ 
+# MVVM_ 
+# CleanArchitecture_ 
+# AndroidJetpackComponents_ComposeUi
+# Flows_  
+# CoRoutines_
